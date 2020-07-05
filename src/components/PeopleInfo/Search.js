@@ -28,8 +28,10 @@ const Search = React.memo(props => {
                 lodadedPerson.push({
                   id: key,
                   firstName: res.data[key].firstName,
-                  lasttName: res.data[key].lastName,
-                  phoneNumber: res.data[key].phoneNumber
+                  lastName: res.data[key].lastName,
+                  phoneNumber: res.data[key].phoneNumber,
+                  prsId :res.data[key].prsId,
+                  file : res.data[key].personFile
                 })
               }
 

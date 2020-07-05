@@ -2,13 +2,25 @@ import React, { useState } from 'react';
 import Card from '../../components/UI/Card';
 import './PersonForm.css';
 import { checkEmptyInput } from '../../shared/validation';
+import  firebase from '../../firebase';
+import { connect } from 'react-redux';
+
 
 const PersonForm = React.memo(props => {
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [enteredPhoneNumber, setEnteredAmount] = useState('');
-  
+  const [enteredFile, setEnteredFile] = useState(null);
+  const [downloadURL, setUrl] = useState(null);
+
+
+  var currentdate = new Date();
+  var datetimeAsID = currentdate.getDate() + "." +
+    (currentdate.getMonth() + 1) + "." + currentdate.getFullYear() +
+    "@" + currentdate.getHours() + ":" + currentdate.getMinutes() + ":" +
+    currentdate.getSeconds();
+
 
   const submitHandler = event => {
     event.preventDefault();
@@ -17,32 +29,72 @@ const PersonForm = React.memo(props => {
       firstName: firstName,
       lastName: lastName,
       phoneNumber: enteredPhoneNumber,
-      userId : props.userId
+      personFile: enteredFile,
+      userId: props.userId,
+      prsId: datetimeAsID,
+      imageUrl : downloadURL
     })
 
     setFirstName('');
     setLastName('');
     setEnteredAmount('');
-   
+    
   };
 
-
-
-let  checkValidation = checkEmptyInput(firstName);
-let  checkValidatioPhone = checkEmptyInput(enteredPhoneNumber);
-
-
-let inpValueValue=[];
-for (const key in checkValidation) { 
-  inpValueValue.push(checkValidation[key])  ;    
-}
-
-let inpValuePhone=[];
-for (const key in checkValidatioPhone) { 
-  inpValuePhone.push(checkValidatioPhone[key])  ;    
-}
-
   
+  
+  const fileUploadHandler = (event) =>{
+    event.preventDefault();
+    if(enteredFile !== null && props.isAuthenticated){
+      
+
+
+   
+    let filename = enteredFile.name;
+    var storageRef = firebase.storage().ref('/personImages/'+ filename);
+    var uploadTask = storageRef.put(enteredFile);
+
+
+
+    // Register three observers:
+// 1. 'state_changed' observer, called any time the state changes
+// 2. Error observer, called on failure
+// 3. Completion observer, called on successful completion
+uploadTask.on('state_changed', function(snapshot){
+  // Observe state change events such as progress, pause, and resume
+  // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+  var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+  console.log('Upload is ' + progress + '% done');
+
+}, function(error) {
+  // Handle unsuccessful uploads
+}, function() {
+  // Handle successful uploads on complete
+  // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+  uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+    setUrl(prevUrl => downloadURL)
+    console.log('File available at', downloadURL);
+  });
+});
+    }
+      
+  }
+
+  let checkValidation = checkEmptyInput(firstName);
+  let checkValidatioPhone = checkEmptyInput(enteredPhoneNumber);
+
+
+  let inpValueValue = [];
+  for (const key in checkValidation) {
+    inpValueValue.push(checkValidation[key]);
+  }
+
+  let inpValuePhone = [];
+  for (const key in checkValidatioPhone) {
+    inpValuePhone.push(checkValidatioPhone[key]);
+  }
+
+
 
   return (
     <section className="person-form">
@@ -66,7 +118,7 @@ for (const key in checkValidatioPhone) {
               onChange={(event) => {
                 setLastName(event.target.value)
               }}
-            
+
             />
           </div>
 
@@ -78,19 +130,38 @@ for (const key in checkValidatioPhone) {
                 setEnteredAmount(event.target.value)
               }}
               required
-              />
+            />
           </div>
+          <div className="form-control">
+            <label htmlFor="file">File</label>
+            <input type="file" id="file"
+              onChange={(event) => {
+                setEnteredFile(event.target.files[0])
+              }}
+
+            />
+          </div>
+          <button
+              className="buttonForForm"
+              onClick={fileUploadHandler}>Upload</button>
+
           <div className="person-form__actions">
             <button
-            className="buttonForForm"
+              className="buttonForForm"
               type="submit">Add Person</button>
-          </div>
+            </div>
         </form>
+
+
       </Card>
     </section>
   );
 });
 
 
-
-export default PersonForm;
+const mapStateToProps = state => {
+  return {
+    isAuthenticated: state.auth.token !== null,
+  };
+};
+export default connect(mapStateToProps)(PersonForm);

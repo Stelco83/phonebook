@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
@@ -7,8 +8,6 @@ import thunk from 'redux-thunk';
 import { BrowserRouter } from 'react-router-dom';
 import authReducer from './store/reducers/auth';
 import { Provider } from 'react-redux';
-
-
 
  const rootReducer = combineReducers({
    
@@ -42,3 +41,6 @@ ReactDOM.render(
     </React.StrictMode>,
     document.getElementById('root')
 );
+
+
+
